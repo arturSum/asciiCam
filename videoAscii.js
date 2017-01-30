@@ -1,32 +1,39 @@
 
+//font-family: 'Courier New'; font-size: 7px; line-height:70%
+
 (function(global){
 
+    var minStreamVal = {
+            width : 100,
+            height : 80
+        },
+        maxStreamVal = {
+            width : 640,
+            height : 480
+        },
 
-    var defaultConfig = {
+        defaultConfig = {
 
             sourceNode :  null,
             audioOnFlag : false,
+            showInputStream : true,
+
+            streamWidth : 400,
+            streamHeight : 300,
+
 
             exitCallback : ()=>{
                 throw{
 
                     id : 5,
-                    data : null
+                    msg : 'Can not find exitCallback function'
                 }
             }
-
-
 
         },
 
         stopRenderLoop = true,
         rafId = null;
-
-
-
-
-
-
 
 
 
@@ -44,13 +51,12 @@
 
         setWindowUrl = ()=>{
 
-            window.URL = window.URL || window.webkitURL;
+            global.URL = global.URL || window.webkitURL;
 
-            return !!window.URL;
+            return !!global.URL;
         },
 
-        createCanvasNode = (parentNode, elWidth, elHeight)=>{
-
+        createCanvasNode = (sourceNode, elWidth, elHeight, displayFlag)=>{
 
             var canvasElement = document.createElement('canvas');
 
@@ -59,31 +65,168 @@
 
             canvasElement.id = 'videoAscii-out-image';
 
-            parentNode.appendChild(canvasElement);
+            if(!displayFlag){
+                canvasElement.style.display = 'none';
+            }
+
+            sourceNode.parentNode.insertBefore(canvasElement, sourceNode.nextSibling);
 
             return canvasElement;
         },
 
+        createExitNode = (parentNode)=>{
+
+            var preElement = document.createElement('pre');
+
+                preElement.style.fontFamily = "Courier New";
+                preElement.style.fontSize = "1px";
+
+            parentNode.appendChild(preElement);
+
+            return preElement;
+        },
 
         setParams = (userParams)=>{
 
-            return{
 
-                sourceNode : userParams.sourceNode &&
-                             userParams.sourceNode instanceof HTMLElement &&
-                             userParams.sourceNode.nodeName == 'video'? userParams.sourceNode : defaultConfig.sourceNode,
+            var exitCallback = (()=>{
+
+                var exitContainerNode = document.getElementById('videoAscii-exitContainer'),
+                    exitNode = null;
+
+
+                if(exitContainerNode){
+
+                    exitNode = createExitNode(exitContainerNode);
+
+                    return function(data){
+
+                        exitNode.innerHTML = data;
+                    }
+
+                }
+
+                return userParams.exitCallback && typeof userParams.exitCallback == 'function'? userParams.exitCallback : defaultConfig.exitCallback;
+
+            })(),
+
+
+
+            sourceNode = ((minSize, maxSize)=>{
+
+
+                var checkCorrectSizeOfNode = (nodeToCheck, minSize, maxSize)=>{
+
+
+                    if(!(nodeToCheck.width && nodeToCheck.height)){
+
+                        return false;
+                    }
+
+                    if(nodeToCheck.width < minSize.width || nodeToCheck.width > maxSize.width){
+
+                        return false;
+                    }
+
+
+                    if(nodeToCheck.height < minSize.height || nodeToCheck.height > maxSize.height){
+
+                        return false;
+                    }
+
+
+                    return true;
+                };
+
+
+
+
+                var setNodeSource = (sourceNode, minSize, maxSize, userParams, checkSizeCallback)=>{
+
+
+                    if( checkSizeCallback(sourceNode, minSize, maxSize) ){
+
+                        return sourceNode;
+                    }
+
+
+                    if(
+                        userParams.streamWidth && userParams.streamHeight &&
+                        userParams.streamWidth > minSize.width && userParams.streamWidth < maxSize.width &&
+                        userParams.streamHeight > minSize.height && userParams.streamHeight < maxSize.height
+                    ){
+
+                        sourceNode.width = userParams.streamWidth;
+                        sourceNode.height = userParams.streamHeight;
+
+                    }
+                    else{
+
+                        sourceNode.width = defaultConfig.streamWidth;
+                        sourceNode.height = defaultConfig.streamHeight;
+
+                        console.info('Stream are oversized. Default settings was set');
+                    }
+
+
+                    return sourceNode;
+                };
+
+
+
+                //############################################################
+
+
+
+                if(
+                    userParams.sourceNode &&
+                    userParams.sourceNode instanceof HTMLElement &&
+                    userParams.sourceNode.nodeName.toLowerCase() == 'video'
+                ){
+
+
+                    return setNodeSource(
+                        userParams.sourceNode,
+                        minSize,
+                        maxSize,
+                        userParams,
+                        checkCorrectSizeOfNode
+                    );
+
+
+                }
+                else if(
+                    defaultConfig.sourceNode &&
+                    defaultConfig.sourceNode instanceof HTMLElement &&
+                    defaultConfig.sourceNode.nodeName.toLowerCase() == 'video'
+                ){
+
+                    return setNodeSource(
+                        defaultConfig.sourceNode,
+                        minSize,
+                        maxSize,
+                        userParams,
+                        checkCorrectSizeOfNode
+                    );
+
+
+                }
+
+
+            })(minStreamVal, maxStreamVal);
+
+
+
+            return{
 
                 audioOnFlag : userParams.audioOnFlag && typeof userParams.audioOnFlag == 'boolean'? userParams.audioOnFlag : defaultConfig.audioOnFlag,
 
-                exitCallback : userParams.exitCallback && typeof  userParams.exitCallback == 'function'? userParams.exitCallback : defaultConfig.exitCallback
+                showInputStream : userParams.showInputStream && typeof userParams.showInputStream == 'boolean'? userParams.showInputStream : defaultConfig.showInputStream,
 
+                sourceNode,
+                exitCallback
 
             }
-
-
-
-
-
 
 
         },
@@ -92,33 +235,36 @@
 
         setVideoStreams = (videoNode, audioOnFlag)=>{
 
-            navigator.getUserMedia(
+            return new Promise((resolve, reject)=>{
 
-                {
-                    video : {
-                        width : {max:640},
-                        height : {max:480}
+                navigator.getUserMedia(
+
+                    {
+                        video : {
+                            width : { max : 680 },
+                            height : {max : 480}
+                        },
+                        audio : audioOnFlag
                     },
 
-                    audio : audioOnFlag
-                },
+                    stream=>{
 
-                stream=>{
+                        videoNode.src = window.URL.createObjectURL(stream);
+                        videoNode.play();
 
-                    videoNode.src = window.URL.createObjectURL(stream);
-                    videoNode.play();
-                },
+                        resolve();
+                    },
 
-                error=>{
+                    error=>{
 
-                    throw {
-                        id : 1,
-                        data : error
+                        reject(error);
+
                     }
 
-                }
+                );
 
-            );
+
+            });
 
         };
 
@@ -133,10 +279,9 @@
             }
 
 
-            canvasCtx.drawImage(videoNode, 0, 0);//dac info czy renderowac wejscie czy nie
 
 
-            //window.postMessage("ddd", "http://localhost:63342");
+            canvasCtx.drawImage(videoNode, 0, 0, videoNode.width, videoNode.height);
 
 
 
@@ -173,10 +318,7 @@
                 brightness = 0.34*imgData[pixelNbr] + 0.5*imgData[pixelNbr+1] + 0.16*imgData[pixelNbr+2];
 
                 //add next line
-                outputString += (pixelNbr>0 && (pixelNbr/4)%rowLength == 0)? '<br />' : '';
-
-
-                //debugger;
+                outputString += (pixelNbr>0 && (pixelNbr/4)%rowLength == 0)? '\n' : '';
 
                 //add corresponding char
                 outputString += asciiConversionCallback(brightness);
@@ -279,6 +421,23 @@
             }
 
 
+        },
+
+
+        trySetControlAction = (actionStorage)=>{
+
+            actionStorage.forEach(([nodeHandle, callback])=>{
+
+
+                if(nodeHandle){
+
+                    nodeHandle.addEventListener('click', ()=>{
+                        callback();
+                    });
+                }
+
+            });
+
         };
 
 
@@ -300,7 +459,6 @@
                  exitCallback
              );
 
-
              draw();
         },
 
@@ -311,12 +469,27 @@
 
 
 
+
+
+
+
     //##################################
 
 
     window.addEventListener('load', ()=>{
 
         defaultConfig.sourceNode = document.getElementById('videoAscii-source');
+
+
+
+
+        // defaultConfig.sourceNode.addEventListener('loadedmetadata', function(e){
+        //
+        //
+        //     console.log(defaultConfig.sourceNode.videoWidth, defaultConfig.sourceNode.videoHeight);
+        //
+        // });
+
 
     });
 
@@ -329,11 +502,9 @@
         var {
                 sourceNode,
                 audioOnFlag,
-                exitCallback
-            } = setParams(config),
-
-            canvasNode = null;
-
+                exitCallback,
+                showInputStream
+            } = setParams(config);
 
 
 
@@ -342,16 +513,15 @@
             throw {
 
                 id : 2,
-                data : null
+                msg : 'Can not find source video node reference in config object'
             }
         }
-
 
         if(!setUserMedia()){
             throw {
 
                 id : 3,
-                data : null
+                msg : 'navigator.getUserMedia not supported'
             }
         }
 
@@ -359,42 +529,84 @@
             throw {
 
                 id : 4,
-                data : null
+                msg : 'window.URL not supported'
             }
         }
 
 
+
         sourceNode.style.display = 'none';
 
-        canvasNode = createCanvasNode(sourceNode.parentNode, sourceNode.width, sourceNode.height);
-
-        setVideoStreams(sourceNode, audioOnFlag);
-
+        var canvasNode = createCanvasNode(sourceNode, sourceNode.width, sourceNode.height, showInputStream),
+            arePlayClicked = false;
 
 
 
+        setVideoStreams(sourceNode, audioOnFlag).then(()=>{
+
+
+            //wait for load metadata of video
+            sourceNode.addEventListener('loadedmetadata', function(e){
+
+
+                //redefine if play was clicked before stream loaded
+                videoAscii.play = ()=>{
+
+                    arePlayClicked = true;
+                    startConversion(canvasNode.getContext('2d'), sourceNode, exitCallback);
+
+
+                };
+
+
+                if(arePlayClicked){
+                    videoAscii.play();
+                }
+
+
+            });
+
+
+        }).
+        catch((reason)=>{
+
+                throw {
+                    id : 1,
+                    msg : 'Set stream source error',
+                    data : reason
+                }
+
+        });
 
 
 
 
+
+        //################# set public out ##################
+
+
+        videoAscii.play = ()=>{
+            arePlayClicked = true;
+        };
+
+        videoAscii.stop = ()=>{
+
+            arePlayClicked = false;
+            stopConversion()
+        };
+
+
+        trySetControlAction([
+            [document.getElementById('videoAscii-play'), videoAscii.play],
+            [document.getElementById('videoAscii-stop'), videoAscii.stop]
+        ]);
 
 
 
         return{
 
-            play(){
-                startConversion(canvasNode.getContext('2d'), sourceNode, exitCallback);
-            },
-
-            pause(){
-
-                stopConversion();
-            },
-
-            stop(){
-
-                stopConversion()
-            }
+            play : videoAscii.play,
+            stop : videoAscii.stop
         }
 
 
@@ -402,7 +614,6 @@
 
 
 
-
-    global.videoAscii = videoAscii.bind(this);
+    global.videoAscii = videoAscii;
 
 })(window);
