@@ -1,5 +1,13 @@
+/*
+* Author : zlecenia.html@gmail.com
+* License : MIT
+*
+* */
 
-//font-family: 'Courier New'; font-size: 7px; line-height:70%
+
+
+
+//outNodeId: asciiCam-out-image
 
 (function(global){
 
@@ -63,7 +71,7 @@
             canvasElement.width = elWidth;
             canvasElement.height = elHeight;
 
-            canvasElement.id = 'videoAscii-out-image';
+            canvasElement.id = 'asciiCam-out-image';
 
             if(!displayFlag){
                 canvasElement.style.display = 'none';
@@ -91,7 +99,7 @@
 
             var exitCallback = (()=>{
 
-                var exitContainerNode = document.getElementById('videoAscii-exitContainer'),
+                var exitContainerNode = document.getElementById('asciiCam-exitContainer'),
                     exitNode = null;
 
 
@@ -242,7 +250,7 @@
                     {
                         video : {
                             width : { max : 680 },
-                            height : {max : 480}
+                            height : { max : 480 }
                         },
                         audio : audioOnFlag
                     },
@@ -278,12 +286,7 @@
                 return;
             }
 
-
-
-
             canvasCtx.drawImage(videoNode, 0, 0, videoNode.width, videoNode.height);
-
-
 
             exitCallback(
 
@@ -478,26 +481,14 @@
 
     window.addEventListener('load', ()=>{
 
-        defaultConfig.sourceNode = document.getElementById('videoAscii-source');
-
-
-
-
-        // defaultConfig.sourceNode.addEventListener('loadedmetadata', function(e){
-        //
-        //
-        //     console.log(defaultConfig.sourceNode.videoWidth, defaultConfig.sourceNode.videoHeight);
-        //
-        // });
-
-
+        defaultConfig.sourceNode = document.getElementById('asciiCam-source');
     });
 
 
     //##################################
 
 
-    function videoAscii(config = {}){
+    function asciiCam(config = {}){
 
         var {
                 sourceNode,
@@ -550,7 +541,7 @@
 
 
                 //redefine if play was clicked before stream loaded
-                videoAscii.play = ()=>{
+                asciiCam.play = ()=>{
 
                     arePlayClicked = true;
                     startConversion(canvasNode.getContext('2d'), sourceNode, exitCallback);
@@ -560,7 +551,7 @@
 
 
                 if(arePlayClicked){
-                    videoAscii.play();
+                    asciiCam.play();
                 }
 
 
@@ -585,11 +576,11 @@
         //################# set public out ##################
 
 
-        videoAscii.play = ()=>{
+        asciiCam.play = ()=>{
             arePlayClicked = true;
         };
 
-        videoAscii.stop = ()=>{
+        asciiCam.stop = ()=>{
 
             arePlayClicked = false;
             stopConversion()
@@ -597,16 +588,16 @@
 
 
         trySetControlAction([
-            [document.getElementById('videoAscii-play'), videoAscii.play],
-            [document.getElementById('videoAscii-stop'), videoAscii.stop]
+            [document.getElementById('asciiCam-play'), asciiCam.play],
+            [document.getElementById('asciiCam-stop'), asciiCam.stop]
         ]);
 
 
 
         return{
 
-            play : videoAscii.play,
-            stop : videoAscii.stop
+            play : asciiCam.play,
+            stop : asciiCam.stop
         }
 
 
@@ -614,6 +605,6 @@
 
 
 
-    global.videoAscii = videoAscii;
+    global.asciiCam = asciiCam;
 
 })(window);
