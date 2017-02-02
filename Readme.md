@@ -18,15 +18,18 @@ Minimum run requirements (see example2.html):
 
 More configuration (send as object parametr of acsiiCam call, see example.html):
 
-{
     [exitCallback] - call on each camera frame with converted ascii data as input param,
+    
     [sourceNode] - input video node,
+    
     [audioOnFlag] - capture audio on/off,
+    
     [showInputStream] - show camera stream view on/off,
+    
     [streamWidth] - width of video node input stream,
+    
     [streamHeight] - height of video node input stream
 
-}
 
 --------------------------------------------------------
 
@@ -35,7 +38,7 @@ You can config play/stop action that control camera stream:
 - add asciiCam.play call to event emitter to start streaming
 - add asciiCam.stop call to event emitter to stop streaming
 
-
+[On line example (Firefox only)] (http://sumartur.cba.pl/asciiCam/) 
 
 
 
