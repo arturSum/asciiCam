@@ -1,9 +1,8 @@
 /*
-* Author : zlecenia.html@gmail.com
+* Author : Artur S. (zlecenia.html@gmail.com)
 * License : MIT
 *
-* */
-
+*/
 
 
 
@@ -96,7 +95,6 @@
 
         setParams = (userParams)=>{
 
-
             var exitCallback = (()=>{
 
                 var exitContainerNode = document.getElementById('asciiCam-exitContainer'),
@@ -109,7 +107,7 @@
 
                     return function(data){
 
-                        exitNode.innerHTML = data;
+                        exitNode.textContent = data;
                     }
 
                 }
@@ -185,6 +183,8 @@
                 //############################################################
 
 
+                defaultConfig.sourceNode = document.getElementById('asciiCam-source');
+
 
                 if(
                     userParams.sourceNode &&
@@ -249,8 +249,8 @@
 
                     {
                         video : {
-                            width : { max : 680 },
-                            height : { max : 480 }
+                            width : { max : 320 },
+                            height : { max : 240 }
                         },
                         audio : audioOnFlag
                     },
@@ -287,6 +287,7 @@
             }
 
             canvasCtx.drawImage(videoNode, 0, 0, videoNode.width, videoNode.height);
+
 
             exitCallback(
 
@@ -470,19 +471,6 @@
             stopRenderLoop = true;
         };
 
-
-
-
-
-
-
-    //##################################
-
-
-    window.addEventListener('load', ()=>{
-
-        defaultConfig.sourceNode = document.getElementById('asciiCam-source');
-    });
 
 
     //##################################
