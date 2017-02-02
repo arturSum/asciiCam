@@ -1,0 +1,40 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+
+#ascii-output{
+
+    font-family: 'Courier New';
+    font-size: 6px;
+    line-height:80%;
+}
+
+#asciiCam-out-image{
+
+    transform: scale(0.6);
+
+    position: absolute;
+    left: -60px;
+    top: 20px;
+}
+
+
+
+#controlPanel{
+
+    margin: 10px 0 0 10px;
+    height: 50px;
+
+}
+
+#controlPanel *{
+
+    float: left;
+    margin: 5px;
+}
+
+#controlPanel button{
+    width: 50px;
+}

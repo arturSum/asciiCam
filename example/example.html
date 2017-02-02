@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+        <title>Test videoAscii</title>
+
+
+        <link rel="stylesheet" href="main.css" />
+
+        <script src="asciiCam.min.js"></script>
+
+        <script>
+
+            window.addEventListener('load', function(){
+
+                var outputNode = document.getElementById('ascii-output'),
+                    streamWidth = (window.innerWidth/4) - 5;
+
+                asciiCam({
+
+                    streamWidth : streamWidth,
+                    streamHeight : Math.floor(streamWidth/1.33),
+
+                    exitCallback : (data)=>{
+                        outputNode.textContent = data;
+                    }
+
+                });
+
+            });
+
+        </script>
+
+    </head>
+
+    <body>
+
+
+
+        <div id="controlPanel">
+
+            <h3>Ascii Cam control panel:</h3>
+
+            <button id="asciiCam-play" onclick="asciiCam.play()">PLAY</button>
+            <button id="asciiCam-stop" onclick="asciiCam.stop()">STOP</button>
+
+        </div>
+
+
+        <!-- asciiCam-source are default ref to inputSource -->
+        <video src="" id="asciiCam-source"></video>
+
+
+        <div id="output-container">
+            <pre id="ascii-output"></pre>
+        </div>
+
+
+        <script>
+
+            var inputStreamNode = null;
+
+            setTimeout(()=>{
+                inputStreamNode = document.getElementById('asciiCam-out-image');
+            }, 500);
+
+
+            window.addEventListener('scroll', (e)=>{
+
+                if(window.pageYOffset == 0){
+                    inputStreamNode.style.top = window.pageYOffset + 20 + 'px';
+                }
+                else{
+                    inputStreamNode.style.top = window.pageYOffset -40 + 'px';
+                }
+
+
+            });
+
+        </script>
+
+
+</body>
+</html>
