@@ -278,7 +278,7 @@
 
 
 
-    var drawFrame = (canvasCtx, videoNode, imgDataQnt, rowLength, asciiConversionCallback, exitCallback)=>{
+    var drawFrame = (canvasCtx, videoNode, imgDataQnt, rowLength, asciiCharsLot, exitCallback)=>{
 
             if(stopRenderLoop){
 
@@ -288,29 +288,25 @@
 
             canvasCtx.drawImage(videoNode, 0, 0, videoNode.width, videoNode.height);
 
-
             exitCallback(
 
                 drawAsciiFrame(
                     canvasCtx.getImageData(0, 0, videoNode.width, videoNode.height).data,
                     imgDataQnt,
                     rowLength,
-                    asciiConversionCallback
+                    asciiCharsLot
                 )
 
             );
 
-
-
             rafId = requestAnimationFrame(()=>{
-               drawFrame(canvasCtx, videoNode, imgDataQnt, rowLength, asciiConversionCallback, exitCallback);
+               drawFrame(canvasCtx, videoNode, imgDataQnt, rowLength, asciiCharsLot, exitCallback);
             });
-
 
         },
 
 
-        drawAsciiFrame = (imgData, imgDataQnt, rowLength, asciiConversionCallback)=>{
+        drawAsciiFrame = (imgData, imgDataQnt, rowLength, asciiCharsLot)=>{
 
             var outputString = '',
                 brightness = 0;
@@ -325,7 +321,7 @@
                 outputString += (pixelNbr>0 && (pixelNbr/4)%rowLength == 0)? '\n' : '';
 
                 //add corresponding char
-                outputString += asciiConversionCallback(brightness);
+                outputString += asciiCharsLot[Math.round(brightness)];
 
             }
 
@@ -333,100 +329,73 @@
         },
 
 
-        setBrightnessToCharCallback = (dir = 'normal')=>{
+        createAsciiCharsLot = (dir = 'normal')=>{
 
-            //grayValue more == black
-            if(dir == 'normal') {
 
-                return function (grayValue) {
+            var make = (grayValStorage)=>{
 
-                    if (grayValue >= 230) {
+                    var grayValStorageQnt = grayValStorage.length,
+                        lotChars = Array(255);
 
-                        return ' ';
-                    }
-                    else if (grayValue >= 200) {
+                    for(var i=0; i<grayValStorageQnt; i++){
 
-                        return '.';
-                    }
-                    else if (grayValue >= 180) {
 
-                        return '*';
-                    }
-                    else if (grayValue >= 160) {
+                        if(i<grayValStorageQnt-1) {
 
-                        return ':';
-                    }
-                    else if (grayValue >= 130) {
+                            lotChars.fill(
+                                grayValStorage[i][1],
+                                grayValStorage[i][0],
+                                grayValStorage[i+1][0]
+                            );
 
-                        return 'o';
-                    }
-                    else if (grayValue >= 100) {
+                            continue;
+                        }
 
-                        return '&';
-                    }
-                    else if (grayValue >= 70) {
+                        lotChars.fill(
+                            grayValStorage[i][1],
+                            grayValStorage[i][0],
+                            256
+                        );
 
-                        return '8';
-                    }
-                    else if (grayValue >= 50) {
-
-                        return '#';
-                    }
-                    else {
-
-                        return '@';
                     }
 
+                    return lotChars;
+                },
 
-                };
+                normalGrayValue = [
 
+                    [0, '@'],
+                    [50, '#'],
+                    [70, '8'],
+                    [100, '&'],
+                    [130, 'o'],
+                    [160, ':'],
+                    [180, '*'],
+                    [230, ' ']
+
+                ],
+                negativeGrayValue = [
+
+                    [0, ' '],
+                    [50, '*'],
+                    [70, ':'],
+                    [100, 'o'],
+                    [130, '&'],
+                    [160, '8'],
+                    [180, '#'],
+                    [230, '@']
+
+                ];
+
+
+            if(dir == 'normal'){
+
+                return make(normalGrayValue);
             }
 
-
-            return function(grayValue){
-
-                if (grayValue >= 230){
-
-                    return '@';
-                }
-                else if(grayValue >= 200){
-
-                    return '#';
-                }
-                else if(grayValue >= 180){
-
-                    return '8';
-                }
-                else if(grayValue >= 160){
-
-                    return '&';
-                }
-                else if(grayValue >= 130){
-
-                    return 'o';
-                }
-                else if(grayValue >= 100){
-
-                    return ':';
-                }
-                else if(grayValue >= 70){
-
-                    return '*';
-                }
-                else if(grayValue >= 50){
-
-                    return '.';
-                }
-                else{
-
-                    return ' ';
-                }
-
-            }
-
+            return make(negativeGrayValue);
 
         },
-
 
         trySetControlAction = (actionStorage)=>{
 
@@ -449,7 +418,8 @@
     var startConversion = (canvasCtx, videoNode, exitCallback)=>{
 
              var imgBuffer = canvasCtx.getImageData(0, 0, videoNode.width, videoNode.height).data,
-                 asciiConversionCallback = setBrightnessToCharCallback();
+                 asciiCharsLot = createAsciiCharsLot();
+
 
              stopRenderLoop = false;
 
@@ -459,7 +429,7 @@
                  videoNode,
                  imgBuffer.length,
                  (imgBuffer.length/videoNode.height)/4,
-                 asciiConversionCallback,
+                 asciiCharsLot,
                  exitCallback
              );
 
